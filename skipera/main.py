@@ -9,6 +9,7 @@ from .discussion.solver import DiscussionPromptSolver
 from .coach.solver import CoachSolver
 from .watcher.watch import Watcher
 from .session_utils import get_csrf_headers, random_delay
+from .reporting import send_daily_report
 
 
 class Skipera(object):
@@ -22,6 +23,7 @@ class Skipera(object):
         self.course = course
         self.llm = llm
         self.failed_items = set()
+        self.daily_report = []
         if not self.get_userid():
             self.refresh_cookies()
             if not self.get_userid():
@@ -131,6 +133,7 @@ class Skipera(object):
         self.process_items(items_to_process, selected_module_ids)
 
     def run_daily(self) -> None:
+        self.daily_report = []
         courses = ([{"slug": self.course, "name": self.course}]
                    if self.course else self.get_pending_courses())
         if not courses:
@@ -198,6 +201,8 @@ class Skipera(object):
                 self.process_items(items_to_process, {module_id}, selected_item_ids)
             except Exception as error:
                 logger.exception(f"Could not process {course['name']}: {error}")
+
+        send_daily_report(self.daily_report)
 
     @staticmethod
     def parse_module_selection(selection: str, module_count: int) -> set[int]:
@@ -341,6 +346,21 @@ class Skipera(object):
         else:
             logger.warning(
                 f"[module:{module_id}] [item:{item_id}] Unknown/skipped item type: {item_type} - skipping.")
+
+        if success:
+            if item_type == "lecture":
+                report_kind = "video"
+            elif item_type in {"ungradedAssignment", "staffGraded"}:
+                report_kind = "quiz"
+            else:
+                report_kind = "other"
+            self.daily_report.append({
+                "kind": report_kind,
+                "course": self.course,
+                "module": module_id,
+                "name": item["name"],
+                "item_type": item_type,
+            })
 
         return success
 

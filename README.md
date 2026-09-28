@@ -71,7 +71,7 @@ If you wish to solve graded assignments automatically, add an OpenRouter, Perple
 skipera introduction-psychology --llm
 ```
 
-OpenRouter is selected first when `OPENROUTER_API_KEY` is set. The default model is `openai/gpt-4o-mini`; override it with `OPENROUTER_MODEL`.
+OpenRouter is selected first when `OPENROUTER_API_KEY` is set. The default model is `nvidia/nemotron-3-ultra-550b-a55b:free`; override it with `OPENROUTER_MODEL`.
 
 ## Google Colab
 
@@ -106,6 +106,15 @@ For a daily run on Windows, create a Task Scheduler task that runs:
 ```
 
 GitHub Actions is also configured in `.github/workflows/daily-skipera.yml`. Add a repository secret named `COURSERA_CAUTH`, then use the **Actions** tab and select **Daily Skipera** to run it manually or wait for the daily schedule. The schedule is `12:23 UTC`; GitHub Actions schedules are fixed and may be delayed, so they do not provide a random 12-to-23-hour interval.
+
+The daily workflow sends a detailed report to `siddhamshah972@gmail.com`. Add these repository secrets for Gmail SMTP:
+
+```text
+SMTP_USERNAME=your-gmail-address
+SMTP_PASSWORD=your-gmail-app-password
+```
+
+Use a Gmail App Password, not your normal Gmail password. The report includes completion counts and each course, module, item name, and item type.
 
 Note that an average 10 question assignment consumes ~5000 input tokens. If you wish to use another LLM through an API, please feel free to make a pull request or contact me.
 
