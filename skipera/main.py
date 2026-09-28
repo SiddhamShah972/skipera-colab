@@ -163,15 +163,39 @@ class Skipera(object):
                     continue
 
                 module_id = selected_module["id"]
-                items_to_process = [
+                module_items = [
                     item for item in all_items
                     if item.get("moduleId") == module_id
+                ]
+                quiz_item = next(
+                    (
+                        item for item in module_items
+                        if item["contentSummary"]["typeName"]
+                        in {"ungradedAssignment", "staffGraded"}
+                        and item["id"] not in completed
+                    ),
+                    None,
+                )
+                selected_item_ids = {
+                    item["id"] for item in module_items
+                    if item["contentSummary"]["typeName"]
+                    not in {"ungradedAssignment", "staffGraded"}
+                }
+                if quiz_item is not None:
+                    selected_item_ids.add(quiz_item["id"])
+                    logger.info(f"{course['name']}: solving one quiz item.")
+                else:
+                    logger.info(f"{course['name']}: no unfinished supported quiz in module.")
+
+                items_to_process = [
+                    item for item in module_items
+                    if item["id"] in selected_item_ids
                 ]
                 logger.info(
                     f"{course['name']}: processing module "
                     f"{selected_module.get('name') or selected_module.get('slug') or module_id}"
                 )
-                self.process_items(items_to_process, {module_id})
+                self.process_items(items_to_process, {module_id}, selected_item_ids)
             except Exception as error:
                 logger.exception(f"Could not process {course['name']}: {error}")
 
@@ -214,8 +238,14 @@ class Skipera(object):
 
         return r.json()
 
-    def process_items(self, all_items: list[dict], selected_module_ids: set[str] | None = None) -> None:
+    def process_items(
+            self,
+            all_items: list[dict],
+            selected_module_ids: set[str] | None = None,
+            selected_item_ids: set[str] | None = None,
+    ) -> None:
         selected_module_ids = selected_module_ids or set()
+        selected_item_ids = selected_item_ids or {item["id"] for item in all_items}
         total = len(all_items)
 
         while True:
@@ -230,6 +260,7 @@ class Skipera(object):
             pending_items = [
                 item for item in current_items
                 if item.get("moduleId") in selected_module_ids
+                and item["id"] in selected_item_ids
                 and item["id"] not in completed
             ]
             if not pending_items:
