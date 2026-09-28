@@ -5,7 +5,7 @@ import httpx
 from loguru import logger
 
 from .. import config
-from ..llm.connector import GeminiConnector, PerplexityConnector
+from ..llm.connector import GeminiConnector, OpenRouterConnector, PerplexityConnector
 from ..session_utils import get_csrf_headers, random_delay
 
 
@@ -67,7 +67,9 @@ class DiscussionPromptSolver(object):
             logger.error("Could not submit discussion answer.")
             return False
 
-    def get_connector(self) -> PerplexityConnector | GeminiConnector:
+    def get_connector(self) -> OpenRouterConnector | PerplexityConnector | GeminiConnector:
+        if config.OPENROUTER_API_KEY:
+            return OpenRouterConnector()
         if config.PERPLEXITY_API_KEY:
             return PerplexityConnector()
         if config.GEMINI_API_KEY:
