@@ -12,7 +12,7 @@ CONFIG_FILE = CONFIG_DIR / "config.json"
 DEFAULT_CONFIG = {
     "cookies": {},
     "openrouter_api_key": "",
-    "openrouter_model": "openai/gpt-4o-mini",
+    "openrouter_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
     "perplexity_api_key": "",
     "gemini_api_key": "",
     "perplexity_model": "sonar-pro",
@@ -100,8 +100,8 @@ OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 COOKIES = _config["cookies"]
 OPENROUTER_API_KEY = os.getenv(
     "OPENROUTER_API_KEY", _config.get("openrouter_api_key", ""))
-OPENROUTER_MODEL = os.getenv(
-    "OPENROUTER_MODEL", _config.get("openrouter_model", "openai/gpt-4o-mini"))
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL") or _config.get(
+    "openrouter_model", "nvidia/nemotron-3-ultra-550b-a55b:free")
 PERPLEXITY_API_KEY = os.getenv(
     "PERPLEXITY_API_KEY", _config.get("perplexity_api_key", ""))
 GEMINI_API_KEY = os.getenv(

@@ -45,14 +45,20 @@ class OpenRouterConnector(object):
             ],
         }
         if response_schema is not None:
-            payload["response_format"] = {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "quiz_responses",
-                    "strict": True,
-                    "schema": response_schema,
-                },
-            }
+            if OPENROUTER_MODEL.endswith(":free"):
+                payload["messages"][0]["content"] += (
+                    "\nReturn only valid JSON matching this schema:\n"
+                    + json.dumps(response_schema)
+                )
+            else:
+                payload["response_format"] = {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "quiz_responses",
+                        "strict": True,
+                        "schema": response_schema,
+                    },
+                }
 
         response = httpx.post(
             url=self.API_URL,
