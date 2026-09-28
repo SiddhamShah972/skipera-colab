@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -73,8 +74,12 @@ def load_config() -> dict:
     config = json.loads(CONFIG_FILE.read_text())
 
     if not config.get("cookies"):
-        logger.info("No cookies in config — enter them to continue.")
-        config["cookies"] = prompt_for_cookies()
+        cauth = os.getenv("COURSERA_CAUTH")
+        if cauth:
+            config["cookies"] = {"CAUTH": cauth}
+        else:
+            logger.info("No cookies in config — enter them to continue.")
+            config["cookies"] = prompt_for_cookies()
         CONFIG_FILE.write_text(json.dumps(config, indent=2))
         logger.info(f"Cookies saved to {CONFIG_FILE}")
 

@@ -103,6 +103,8 @@ For a daily run on Windows, create a Task Scheduler task that runs:
 \.venv\Scripts\skipera.exe --daily
 ```
 
+GitHub Actions is also configured in `.github/workflows/daily-skipera.yml`. Add a repository secret named `COURSERA_CAUTH`, then use the **Actions** tab and select **Daily Skipera** to run it manually or wait for the daily schedule. The schedule is `12:23 UTC`; GitHub Actions schedules are fixed and may be delayed, so they do not provide a random 12-to-23-hour interval.
+
 Note that an average 10 question assignment consumes ~5000 input tokens. If you wish to use another LLM through an API, please feel free to make a pull request or contact me.
 
 Currently, only the single-choice and multiple-choice objective questions are supported in this mode. Note that you might
