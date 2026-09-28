@@ -1,6 +1,7 @@
 import json
 import httpx
-from ..config import (PERPLEXITY_API_URL, PERPLEXITY_API_KEY,
+from ..config import (OPENROUTER_API_KEY, OPENROUTER_API_URL,
+                      OPENROUTER_MODEL, PERPLEXITY_API_URL, PERPLEXITY_API_KEY,
                       PERPLEXITY_MODEL, GEMINI_API_KEY, GEMINI_MODEL)
 from google import genai
 from google.genai import types
@@ -21,6 +22,52 @@ class ResponseList(BaseModel):
 
 
 DEFAULT_RESPONSE_SCHEMA = ResponseList.model_json_schema()
+
+
+class OpenRouterConnector(object):
+    def __init__(self):
+        self.API_URL: str = OPENROUTER_API_URL
+        self.API_KEY: str = OPENROUTER_API_KEY
+
+    def get_response(
+            self,
+            prompt: dict | str,
+            system_prompt: str,
+            response_schema: dict[str, Any] | None = None
+    ) -> dict | str:
+        logger.debug("Making an API request to OpenRouter...")
+        payload = {
+            "model": OPENROUTER_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": json.dumps(
+                    prompt) if isinstance(prompt, dict) else prompt},
+            ],
+        }
+        if response_schema is not None:
+            payload["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "quiz_responses",
+                    "strict": True,
+                    "schema": response_schema,
+                },
+            }
+
+        response = httpx.post(
+            url=self.API_URL,
+            headers={
+                "Authorization": f"Bearer {self.API_KEY}",
+                "HTTP-Referer": "https://github.com/SiddhamShah972/skipera-colab",
+                "X-Title": "Skipera",
+            },
+            json=payload,
+            timeout=60.0,
+        ).json()
+        content = response["choices"][0]["message"]["content"]
+        if response_schema is not None:
+            return json.loads(content)
+        return content.strip()
 
 
 class PerplexityConnector(object):

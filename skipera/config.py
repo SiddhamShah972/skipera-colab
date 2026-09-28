@@ -11,6 +11,8 @@ CONFIG_FILE = CONFIG_DIR / "config.json"
 
 DEFAULT_CONFIG = {
     "cookies": {},
+    "openrouter_api_key": "",
+    "openrouter_model": "openai/gpt-4o-mini",
     "perplexity_api_key": "",
     "gemini_api_key": "",
     "perplexity_model": "sonar-pro",
@@ -92,11 +94,18 @@ _config = load_config()
 BASE_URL = "https://www.coursera.org/api/"
 GRAPHQL_URL = "https://www.coursera.org/graphql-gateway"
 PERPLEXITY_API_URL = "https://api.perplexity.ai/chat/completions"
+OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 # User-configurable
 COOKIES = _config["cookies"]
-PERPLEXITY_API_KEY = _config.get("perplexity_api_key", "")
-GEMINI_API_KEY = _config.get("gemini_api_key", "")
+OPENROUTER_API_KEY = os.getenv(
+    "OPENROUTER_API_KEY", _config.get("openrouter_api_key", ""))
+OPENROUTER_MODEL = os.getenv(
+    "OPENROUTER_MODEL", _config.get("openrouter_model", "openai/gpt-4o-mini"))
+PERPLEXITY_API_KEY = os.getenv(
+    "PERPLEXITY_API_KEY", _config.get("perplexity_api_key", ""))
+GEMINI_API_KEY = os.getenv(
+    "GEMINI_API_KEY", _config.get("gemini_api_key", ""))
 PERPLEXITY_MODEL = _config.get("perplexity_model", "sonar-pro")
 GEMINI_MODEL = _config.get("gemini_model", "gemini-3.1-flash-lite")
 

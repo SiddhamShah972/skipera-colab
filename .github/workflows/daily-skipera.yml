@@ -27,4 +27,8 @@ jobs:
       - name: Process one module per enrolled course
         env:
           COURSERA_CAUTH: ${{ secrets.COURSERA_CAUTH }}
-        run: skipera --daily
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+        run: skipera --daily --llm

@@ -65,11 +65,13 @@ skipera introduction-psychology
 
 ## LLM Support
 
-If you wish to solve graded assignments automatically, add your Perplexity or Gemini API key to the config file and use the `--llm` flag:
+If you wish to solve graded assignments automatically, add an OpenRouter, Perplexity, or Gemini API key to the config file and use the `--llm` flag:
 
 ```bash
 skipera introduction-psychology --llm
 ```
+
+OpenRouter is selected first when `OPENROUTER_API_KEY` is set. The default model is `openai/gpt-4o-mini`; override it with `OPENROUTER_MODEL`.
 
 ## Google Colab
 

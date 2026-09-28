@@ -11,7 +11,8 @@ from ..config import GRAPHQL_URL, CONFIG_DIR
 from .queries import (GET_STATE_QUERY, SAVE_RESPONSES_QUERY, SUBMIT_DRAFT_QUERY,
                       INITIATE_ATTEMPT_QUERY, ASSIGNMENT_FEEDBACK_QUERY)
 from loguru import logger
-from ..llm.connector import DEFAULT_RESPONSE_SCHEMA, PerplexityConnector, GeminiConnector
+from ..llm.connector import (DEFAULT_RESPONSE_SCHEMA, GeminiConnector,
+                              OpenRouterConnector, PerplexityConnector)
 from ..session_utils import get_csrf_headers, random_delay
 
 
@@ -238,7 +239,9 @@ class GradedSolver(object):
                             unsolved_questions[part_id]["previous_attempts"] = virtual_feedbacks
 
             if unsolved_questions:
-                if config.PERPLEXITY_API_KEY:
+                if config.OPENROUTER_API_KEY:
+                    connector = OpenRouterConnector()
+                elif config.PERPLEXITY_API_KEY:
                     connector = PerplexityConnector()
                 elif config.GEMINI_API_KEY:
                     connector = GeminiConnector()
