@@ -108,3 +108,12 @@ def run(cookies: dict | str | None = None, llm: bool = False) -> None:
     ]
 
     app.process_items(items_to_process, selected_module_ids)
+
+
+def run_daily(cookies: dict | str | None = None, llm: bool = False) -> None:
+    """Process one next unfinished module for every enrolled course."""
+    _save_cookies(_read_cookies(cookies))
+
+    from .main import Skipera
+
+    Skipera(None, llm).run_daily()

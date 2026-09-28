@@ -130,6 +130,51 @@ class Skipera(object):
 
         self.process_items(items_to_process, selected_module_ids)
 
+    def run_daily(self) -> None:
+        courses = ([{"slug": self.course, "name": self.course}]
+                   if self.course else self.get_pending_courses())
+        if not courses:
+            raise click.ClickException("No enrolled Coursera courses were found.")
+
+        for course in courses:
+            self.course = course["slug"]
+            self.failed_items.clear()
+            try:
+                data = self.get_course_materials()
+                self.course_id = data["elements"][0]["id"]
+                all_items = data["linked"]["onDemandCourseMaterialItems.v2"]
+                modules = data["linked"]["onDemandCourseMaterialModules.v1"]
+                completed = self.get_completed_items()
+
+                selected_module = next(
+                    (
+                        module for module in modules
+                        if any(
+                            item.get("moduleId") == module["id"]
+                            and item["id"] not in completed
+                            and not item.get("isLocked", False)
+                            for item in all_items
+                        )
+                    ),
+                    None,
+                )
+                if selected_module is None:
+                    logger.info(f"{course['name']}: no unfinished unlocked module.")
+                    continue
+
+                module_id = selected_module["id"]
+                items_to_process = [
+                    item for item in all_items
+                    if item.get("moduleId") == module_id
+                ]
+                logger.info(
+                    f"{course['name']}: processing module "
+                    f"{selected_module.get('name') or selected_module.get('slug') or module_id}"
+                )
+                self.process_items(items_to_process, {module_id})
+            except Exception as error:
+                logger.exception(f"Could not process {course['name']}: {error}")
+
     @staticmethod
     def parse_module_selection(selection: str, module_count: int) -> set[int]:
         if not selection:
@@ -360,8 +405,12 @@ class Skipera(object):
 @click.command()
 @click.argument('slug', required=False)
 @click.option('--llm', is_flag=True, help="Whether to use an LLM to solve graded assignments.")
-def main(slug: str | None, llm: bool) -> None:
+@click.option('--daily', is_flag=True, help="Process one unfinished module for every enrolled course.")
+def main(slug: str | None, llm: bool, daily: bool) -> None:
     skipera = Skipera(slug, llm)
+    if daily:
+        skipera.run_daily()
+        return
     if not skipera.course:
         skipera.course = skipera.choose_course()
     skipera.get_course()
