@@ -87,7 +87,7 @@ from skipera.colab import run
 run()
 ```
 
-The notebook prompts for the Coursera cookie JSON, lists enrolled courses, lets you select a course, and then runs only the module you select. Do not put cookies directly into a saved notebook.
+The notebook prompts for the raw Coursera `CAUTH` cookie value, lists enrolled courses, lets you select a course, and then runs only the module you select. Do not put cookies directly into a saved notebook.
 
 Note that an average 10 question assignment consumes ~5000 input tokens. If you wish to use another LLM through an API, please feel free to make a pull request or contact me.
 

@@ -1,5 +1,7 @@
 import json
+import ast
 from getpass import getpass
+from http.cookies import SimpleCookie
 from pathlib import Path
 
 
@@ -15,13 +17,34 @@ DEFAULT_CONFIG = {
 def _read_cookies(cookies: dict | str | None) -> dict:
     raw_cookies = cookies
     if raw_cookies is None:
-        raw_cookies = getpass("Paste Coursera cookies as JSON: ")
+        raw_cookies = getpass("Paste the Coursera CAUTH cookie value: ")
 
     if isinstance(raw_cookies, str):
+        cookie_text = raw_cookies.strip()
         try:
-            raw_cookies = json.loads(raw_cookies)
-        except json.JSONDecodeError as error:
-            raise ValueError("cookies must be a JSON object") from error
+            raw_cookies = json.loads(cookie_text)
+        except json.JSONDecodeError:
+            try:
+                raw_cookies = ast.literal_eval(cookie_text)
+            except (SyntaxError, ValueError):
+                cookie_header = SimpleCookie()
+                cookie_header.load(cookie_text)
+                raw_cookies = {
+                    name: morsel.value
+                    for name, morsel in cookie_header.items()
+                }
+
+            if not raw_cookies:
+                raw_cookies = {"CAUTH": cookie_text}
+
+    if isinstance(raw_cookies, list):
+        raw_cookies = {
+            cookie["name"]: cookie["value"]
+            for cookie in raw_cookies
+            if isinstance(cookie, dict)
+            and cookie.get("name")
+            and cookie.get("value") is not None
+        }
 
     if not isinstance(raw_cookies, dict) or not raw_cookies.get("CAUTH"):
         raise ValueError("cookies must be a dictionary containing CAUTH")
