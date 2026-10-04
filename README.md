@@ -105,7 +105,7 @@ For a daily run on Windows, create a Task Scheduler task that runs:
 \.venv\Scripts\skipera.exe --daily
 ```
 
-GitHub Actions is also configured in `.github/workflows/daily-skipera.yml`. Add a repository secret named `COURSERA_CAUTH`, then use the **Actions** tab and select **Daily Skipera** to run it manually or wait for the daily schedule. The schedule is `12:23 UTC`; GitHub Actions schedules are fixed and may be delayed, so they do not provide a random 12-to-23-hour interval.
+GitHub Actions is also configured in `.github/workflows/daily-skipera.yml`. Add a repository secret named `COURSERA_CAUTH` (raw `CAUTH` value, full cookie header text, or cookie JSON), then use the **Actions** tab and select **Daily Skipera** to run it manually or wait for the daily schedule. The schedule is `12:23 UTC`; GitHub Actions schedules are fixed and may be delayed, so they do not provide a random 12-to-23-hour interval.
 
 The daily workflow sends a detailed report to `siddhamshah972@gmail.com`. Add these repository secrets for Gmail SMTP:
 
