@@ -1,7 +1,8 @@
 import click
 import httpx
+import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from .config import prompt_for_cookies, CONFIG_FILE, DEFAULT_CONFIG, BASE_URL, HEADERS, COOKIES
+from .config import parse_cookies, prompt_for_cookies, CONFIG_FILE, DEFAULT_CONFIG, BASE_URL, HEADERS, COOKIES
 import json
 from loguru import logger
 from .assessment.solver import GradedSolver
@@ -33,7 +34,12 @@ class Skipera(object):
 
     def refresh_cookies(self):
         logger.warning("Session expired — enter new Coursera cookies...")
-        cookies = prompt_for_cookies()
+        cauth = os.getenv("COURSERA_CAUTH")
+        if cauth:
+            logger.info("Trying cookies from COURSERA_CAUTH.")
+            cookies = parse_cookies(cauth)
+        else:
+            cookies = prompt_for_cookies()
         self.session.cookies.clear()
         self.session.cookies.update(cookies)
         cfg = json.loads(CONFIG_FILE.read_text()

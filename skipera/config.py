@@ -1,6 +1,8 @@
+import ast
 import json
 import os
 import sys
+from http.cookies import SimpleCookie
 from pathlib import Path
 
 import click
@@ -52,20 +54,57 @@ def fetch_browser_cookies() -> dict:
 def prompt_for_cookies() -> dict:
     while True:
         raw_cookies = click.prompt(
-            'Paste Coursera cookies as JSON (for example, {"CAUTH": "..."})',
+            'Paste Coursera cookies (raw CAUTH value, cookie header, or JSON)',
             hide_input=True,
         )
         try:
-            cookies = json.loads(raw_cookies)
-        except json.JSONDecodeError:
-            logger.error("Cookies must be valid JSON.")
-            continue
-
-        if not isinstance(cookies, dict) or not cookies.get("CAUTH"):
-            logger.error("The cookie JSON must contain a CAUTH value.")
+            cookies = parse_cookies(raw_cookies)
+        except ValueError as error:
+            logger.error(str(error))
             continue
 
         return cookies
+
+
+def parse_cookies(raw_cookies: dict | list | str) -> dict:
+    cookies = raw_cookies
+
+    if isinstance(cookies, str):
+        cookie_text = cookies.strip()
+        try:
+            cookies = json.loads(cookie_text)
+        except json.JSONDecodeError:
+            try:
+                cookies = ast.literal_eval(cookie_text)
+            except (SyntaxError, ValueError):
+                cookie_header = SimpleCookie()
+                cookie_header.load(cookie_text)
+                cookies = {
+                    name: morsel.value
+                    for name, morsel in cookie_header.items()
+                }
+
+            if not cookies:
+                cookies = {"CAUTH": cookie_text}
+
+    if isinstance(cookies, list):
+        cookies = {
+            cookie["name"]: cookie["value"]
+            for cookie in cookies
+            if isinstance(cookie, dict)
+            and cookie.get("name")
+            and cookie.get("value") is not None
+        }
+
+    if isinstance(cookies, dict):
+        cauth_key = next((key for key in cookies if key.upper() == "CAUTH"), None)
+        if cauth_key and cauth_key != "CAUTH":
+            cookies["CAUTH"] = cookies[cauth_key]
+
+    if not isinstance(cookies, dict) or not cookies.get("CAUTH"):
+        raise ValueError("cookies must include a CAUTH value")
+
+    return cookies
 
 
 def load_config() -> dict:
@@ -78,7 +117,7 @@ def load_config() -> dict:
     if not config.get("cookies"):
         cauth = os.getenv("COURSERA_CAUTH")
         if cauth:
-            config["cookies"] = {"CAUTH": cauth}
+            config["cookies"] = parse_cookies(cauth)
         else:
             logger.info("No cookies in config — enter them to continue.")
             config["cookies"] = prompt_for_cookies()
